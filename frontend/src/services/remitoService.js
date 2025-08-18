@@ -1,14 +1,18 @@
-// src/services/remitoService.js
+// 📁 src/services/remitoService.js
 import axios from 'axios';
 
+// Base URL según entorno
+const BASE_URL = (process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/remitos';
+
+// Funciones del servicio
 export const crearRemito = async (data) => {
-  return await axios.post('http://localhost:5000/api/remitos', data);
+  return await axios.post(BASE_URL, data);
 };
 
 export const obtenerRemitos = async () => {
-  return await axios.get('http://localhost:5000/api/remitos');
+  return await axios.get(BASE_URL);
 };
 
 export const eliminarRemito = async (id) => {
-  return await axios.delete(`http://localhost:5000/api/remitos/${id}`);
+  return await axios.delete(`${BASE_URL}/${id}`);
 };

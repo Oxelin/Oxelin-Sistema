@@ -1,4 +1,6 @@
+// 📁 src/context/AuthContext.jsx
 import { createContext, useContext, useState } from 'react';
+import { login as loginService } from '../services/authService'; // 👈 usa el servicio central
 
 const AuthContext = createContext();
 
@@ -8,17 +10,10 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const res = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
+      const data = await loginService({ username, password }); // usa el servicio
 
-      if (!res.ok) return false;
-
-      const data = await res.json();
-      localStorage.setItem('token', data.token);
-      setToken(data.token);
+      localStorage.setItem('token', data.data.token); // data.data porque axios devuelve {data: ...}
+      setToken(data.data.token);
       return true;
     } catch (err) {
       console.error('Error en login:', err);

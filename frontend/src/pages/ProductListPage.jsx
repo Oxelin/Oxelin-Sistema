@@ -2,16 +2,14 @@ import React, { useEffect, useState } from 'react';
 import {
   Box, Typography, Table, TableHead, TableRow, TableCell,
   TableBody, IconButton, Dialog, DialogTitle, DialogContent,
-  DialogActions, TextField, Button, Paper, InputAdornment, CircularProgress
+  DialogActions, TextField, Button, Paper, InputAdornment,
+  CircularProgress, useMediaQuery
 } from '@mui/material';
 import { Delete, Edit, Add, Search } from '@mui/icons-material';
-import {
-  getProductos,
-  crearProducto,
-  actualizarProducto,
-  eliminarProducto
-} from '../services/productService';
+import { getProductos, crearProducto, actualizarProducto, eliminarProducto } from '../services/productService';
 import DialogConfirm from '../components/DialogConfirm';
+import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'react-toastify';
 
 export default function ProductListPage() {
   const [productos, setProductos] = useState([]);
@@ -26,12 +24,10 @@ export default function ProductListPage() {
   const [loadingEdit, setLoadingEdit] = useState(false);
   const [loadingDelete, setLoadingDelete] = useState(false);
   const [form, setForm] = useState({
-    nombre: '',
-    costo: '',
-    precioConsumidorFinal: '',
-    precioRevendedor: '',
-    stock: ''
+    nombre: '', costo: '', precioConsumidorFinal: '', precioRevendedor: '', stock: ''
   });
+
+  const isMobile = useMediaQuery("(max-width:600px)");
 
   const fetchProductos = async () => {
     try {
@@ -41,14 +37,13 @@ export default function ProductListPage() {
       setFilteredProductos(res.data);
     } catch (error) {
       console.error("Error al cargar productos:", error);
+      toast.error("Error cargando productos.");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchProductos();
-  }, []);
+  useEffect(() => { fetchProductos(); }, []);
 
   const handleSearch = (value) => {
     setSearch(value);
@@ -60,9 +55,7 @@ export default function ProductListPage() {
     );
   };
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleCreateOpen = () => {
     setForm({ nombre: '', costo: '', precioConsumidorFinal: '', precioRevendedor: '', stock: '' });
@@ -75,11 +68,11 @@ export default function ProductListPage() {
       await crearProducto(form);
       await fetchProductos();
       setCreateOpen(false);
+      toast.success("Producto creado correctamente");
     } catch (error) {
       console.error("Error al crear producto:", error);
-    } finally {
-      setLoadingCreate(false);
-    }
+      toast.error("Error al crear producto");
+    } finally { setLoadingCreate(false); }
   };
 
   const handleEditOpen = (producto) => {
@@ -100,11 +93,11 @@ export default function ProductListPage() {
       await actualizarProducto(selectedProduct._id, form);
       await fetchProductos();
       setEditOpen(false);
+      toast.success("Producto actualizado correctamente");
     } catch (error) {
       console.error("Error al editar producto:", error);
-    } finally {
-      setLoadingEdit(false);
-    }
+      toast.error("Error al actualizar producto");
+    } finally { setLoadingEdit(false); }
   };
 
   const handleDeleteClick = (producto) => {
@@ -119,18 +112,18 @@ export default function ProductListPage() {
       await fetchProductos();
       setConfirmOpen(false);
       setSelectedProduct(null);
+      toast.success("Producto eliminado correctamente");
     } catch (error) {
       console.error("Error al eliminar producto:", error);
-    } finally {
-      setLoadingDelete(false);
-    }
+      toast.error("Error al eliminar producto");
+    } finally { setLoadingDelete(false); }
   };
 
   return (
     <Box p={3}>
-      {/* Encabezado */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" fontWeight="bold" color="primary">
+      {/* Header */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexDirection={isMobile ? 'column' : 'row'}>
+        <Typography variant="h4" fontWeight="bold" color="primary" mb={isMobile ? 2 : 0}>
           📦 Lista de Productos
         </Typography>
         <Button variant="contained" startIcon={<Add />} onClick={handleCreateOpen}>
@@ -161,36 +154,48 @@ export default function ProductListPage() {
           <CircularProgress size={60} />
         </Box>
       ) : (
-        <Paper>
+        <Paper sx={{ overflowX: "auto" }}>
           <Table>
             <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
               <TableRow>
                 <TableCell><strong>Nombre</strong></TableCell>
-                <TableCell><strong>Costo</strong></TableCell>
-                <TableCell><strong>Precio Consumidor</strong></TableCell>
-                <TableCell><strong>Precio Revendedor</strong></TableCell>
-                <TableCell><strong>Stock</strong></TableCell>
+                {!isMobile && <TableCell><strong>Costo</strong></TableCell>}
+                {!isMobile && <TableCell><strong>Precio Consumidor</strong></TableCell>}
+                {!isMobile && <TableCell><strong>Precio Revendedor</strong></TableCell>}
+                {!isMobile && <TableCell><strong>Stock</strong></TableCell>}
                 <TableCell><strong>Acciones</strong></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredProductos.map((prod, index) => (
-                <TableRow key={prod._id} sx={{ backgroundColor: index % 2 ? '#fafafa' : 'white' }}>
-                  <TableCell>{prod.nombre}</TableCell>
-                  <TableCell>${prod.costo}</TableCell>
-                  <TableCell>${prod.precioConsumidorFinal}</TableCell>
-                  <TableCell>${prod.precioRevendedor}</TableCell>
-                  <TableCell>{prod.stock}</TableCell>
-                  <TableCell>
-                    <IconButton onClick={() => handleEditOpen(prod)} color="primary">
-                      <Edit />
-                    </IconButton>
-                    <IconButton onClick={() => handleDeleteClick(prod)} color="error">
-                      <Delete />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
+              <AnimatePresence>
+                {filteredProductos.map((prod, index) => (
+                  <motion.tr
+                    key={prod._id}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    transition={{ duration: 0.3 }}
+                    style={{ backgroundColor: index % 2 ? '#fafafa' : 'white' }}
+                    whileHover={{ scale: 1.02, backgroundColor: "#f0f0f0" }}
+                  >
+                    <TableCell>{prod.nombre}</TableCell>
+                    {!isMobile && <TableCell>${prod.costo}</TableCell>}
+                    {!isMobile && <TableCell>${prod.precioConsumidorFinal}</TableCell>}
+                    {!isMobile && <TableCell>${prod.precioRevendedor}</TableCell>}
+                    {!isMobile && <TableCell>{prod.stock}</TableCell>}
+                    <TableCell>
+                      <motion.div whileTap={{ scale: 0.8 }}>
+                        <IconButton onClick={() => handleEditOpen(prod)} color="primary">
+                          <Edit />
+                        </IconButton>
+                        <IconButton onClick={() => handleDeleteClick(prod)} color="error">
+                          <Delete />
+                        </IconButton>
+                      </motion.div>
+                    </TableCell>
+                  </motion.tr>
+                ))}
+              </AnimatePresence>
             </TableBody>
           </Table>
         </Paper>
@@ -200,11 +205,16 @@ export default function ProductListPage() {
       <Dialog open={createOpen} onClose={() => setCreateOpen(false)}>
         <DialogTitle>Agregar Producto</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-          <TextField label="Nombre" name="nombre" value={form.nombre} onChange={handleChange} />
-          <TextField label="Costo" name="costo" type="number" value={form.costo} onChange={handleChange} />
-          <TextField label="Precio Consumidor" name="precioConsumidorFinal" type="number" value={form.precioConsumidorFinal} onChange={handleChange} />
-          <TextField label="Precio Revendedor" name="precioRevendedor" type="number" value={form.precioRevendedor} onChange={handleChange} />
-          <TextField label="Stock" name="stock" type="number" value={form.stock} onChange={handleChange} />
+          {["nombre","costo","precioConsumidorFinal","precioRevendedor","stock"].map((field) => (
+            <TextField
+              key={field}
+              label={field === "precioConsumidorFinal" ? "Precio Consumidor" : field === "precioRevendedor" ? "Precio Revendedor" : field.charAt(0).toUpperCase() + field.slice(1)}
+              name={field}
+              type={["costo","precioConsumidorFinal","precioRevendedor","stock"].includes(field) ? "number" : "text"}
+              value={form[field]}
+              onChange={handleChange}
+            />
+          ))}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setCreateOpen(false)} disabled={loadingCreate}>Cancelar</Button>
@@ -223,11 +233,16 @@ export default function ProductListPage() {
       <Dialog open={editOpen} onClose={() => setEditOpen(false)}>
         <DialogTitle>Editar Producto</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-          <TextField label="Nombre" name="nombre" value={form.nombre} onChange={handleChange} />
-          <TextField label="Costo" name="costo" type="number" value={form.costo} onChange={handleChange} />
-          <TextField label="Precio Consumidor" name="precioConsumidorFinal" type="number" value={form.precioConsumidorFinal} onChange={handleChange} />
-          <TextField label="Precio Revendedor" name="precioRevendedor" type="number" value={form.precioRevendedor} onChange={handleChange} />
-          <TextField label="Stock" name="stock" type="number" value={form.stock} onChange={handleChange} />
+          {["nombre","costo","precioConsumidorFinal","precioRevendedor","stock"].map((field) => (
+            <TextField
+              key={field}
+              label={field === "precioConsumidorFinal" ? "Precio Consumidor" : field === "precioRevendedor" ? "Precio Revendedor" : field.charAt(0).toUpperCase() + field.slice(1)}
+              name={field}
+              type={["costo","precioConsumidorFinal","precioRevendedor","stock"].includes(field) ? "number" : "text"}
+              value={form[field]}
+              onChange={handleChange}
+            />
+          ))}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditOpen(false)} disabled={loadingEdit}>Cancelar</Button>
@@ -247,7 +262,7 @@ export default function ProductListPage() {
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         onConfirm={handleConfirmDelete}
-        loading={loadingDelete} // 👈 Pasamos el estado de carga
+        loading={loadingDelete}
         message="¿Estás seguro que deseas eliminar este producto?"
       />
     </Box>

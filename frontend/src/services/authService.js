@@ -1,9 +1,12 @@
 // src/services/authService.js
 import axios from 'axios';
 
-const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL,
-});
+const BASE_URL = (process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/auth';
 
-export const register = (data) => API.post('/users/register', data);
-export const login = (credentials) => API.post('/auth/login', credentials);
+export const register = async (data) => {
+  return await axios.post(`${BASE_URL}/register`, data); // ✅ aquí /api/auth/register
+};
+
+export const login = async (data) => {
+  return await axios.post(`${BASE_URL}/login`, data);
+};

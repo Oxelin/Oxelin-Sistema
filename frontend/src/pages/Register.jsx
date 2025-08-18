@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { register } from '../services/authService'; // 👈 aquí
 import {
   Container,
   TextField,
@@ -21,8 +21,8 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/auth/register', form);
-      navigate('/login'); // redirige al login después de registrarse
+      await register(form); // 👈 usa el servicio
+      navigate('/login');
     } catch (err) {
       console.error(err);
       alert('Error al registrar');

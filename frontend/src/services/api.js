@@ -1,7 +1,7 @@
 // 📁 src/services/api.js
 import axios from 'axios';
 
-const API = axios.create({ baseURL: 'http://localhost:5000/api' });
+const API = axios.create({ baseURL: process.env.REACT_APP_API_URL });
 
 // Interceptar y agregar token si existe
 API.interceptors.request.use((req) => {

@@ -20,6 +20,7 @@ import {
   Paper,
   Fade,
   CircularProgress,
+  useMediaQuery,
 } from "@mui/material";
 import {
   Delete as DeleteIcon,
@@ -32,7 +33,7 @@ import { getClientes } from "../services/clientService";
 import { getProductos } from "../services/productService";
 import { crearRemito } from "../services/remitoService";
 import { toast } from "react-toastify";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Remitos = () => {
   const [clientes, setClientes] = useState([]);
@@ -43,6 +44,8 @@ const Remitos = () => {
   const [loadingClientes, setLoadingClientes] = useState(true);
   const [loadingProductos, setLoadingProductos] = useState(true);
   const [loadingSave, setLoadingSave] = useState(false);
+
+  const isMobile = useMediaQuery("(max-width:600px)");
 
   useEffect(() => {
     const fetchClientes = async () => {
@@ -97,8 +100,8 @@ const Remitos = () => {
       return;
     }
     const precioUnitario = producto[tipoPrecio] ?? 0;
-    setProductosAgregados([
-      ...productosAgregados,
+    setProductosAgregados((prev) => [
+      ...prev,
       {
         ...producto,
         cantidad: 1,
@@ -116,9 +119,11 @@ const Remitos = () => {
   };
 
   const handleEliminarProducto = (index) => {
-    const nuevos = [...productosAgregados];
-    nuevos.splice(index, 1);
-    setProductosAgregados(nuevos);
+    setProductosAgregados((prev) => {
+      const nuevos = [...prev];
+      nuevos.splice(index, 1);
+      return nuevos;
+    });
   };
 
   const handleGuardarRemito = async () => {
@@ -174,7 +179,8 @@ const Remitos = () => {
           p: 3,
           borderRadius: 2,
           mb: 4,
-          boxShadow: 2,
+          boxShadow: 3,
+          textAlign: isMobile ? "center" : "left",
         }}
         component={motion.div}
         initial={{ scale: 0.98 }}
@@ -202,13 +208,14 @@ const Remitos = () => {
               {...params}
               label="Seleccionar Cliente"
               variant="outlined"
+              fullWidth
               InputProps={{
                 ...params.InputProps,
                 endAdornment: (
                   <>
-                    {loadingClientes ? (
+                    {loadingClientes && (
                       <CircularProgress color="inherit" size={20} />
-                    ) : null}
+                    )}
                     {params.InputProps.endAdornment}
                   </>
                 ),
@@ -258,13 +265,14 @@ const Remitos = () => {
               {...params}
               label="Buscar Producto"
               variant="outlined"
+              fullWidth
               InputProps={{
                 ...params.InputProps,
                 endAdornment: (
                   <>
-                    {loadingProductos ? (
+                    {loadingProductos && (
                       <CircularProgress color="inherit" size={20} />
-                    ) : null}
+                    )}
                     {params.InputProps.endAdornment}
                   </>
                 ),
@@ -284,52 +292,65 @@ const Remitos = () => {
         <TableContainer
           component={Paper}
           elevation={3}
-          sx={{ borderRadius: 2, mb: 2 }}
+          sx={{
+            borderRadius: 2,
+            mb: 2,
+            overflowX: "auto",
+          }}
         >
-          <Table size="small">
+          <Table size={isMobile ? "small" : "medium"}>
             <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
               <TableRow>
                 <TableCell><b>Producto</b></TableCell>
-                <TableCell><b>Cantidad</b></TableCell>
+                {!isMobile && <TableCell><b>Cantidad</b></TableCell>}
                 <TableCell><b>Precio Unitario</b></TableCell>
-                <TableCell><b>Subtotal</b></TableCell>
+                {!isMobile && <TableCell><b>Subtotal</b></TableCell>}
                 <TableCell><b>Acciones</b></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {productosAgregados.map((prod, index) => (
-                <TableRow key={prod._id}>
-                  <TableCell>{prod.nombre}</TableCell>
-                  <TableCell>
-                    <TextField
-                      type="number"
-                      size="small"
-                      variant="outlined"
-                      value={prod.cantidad}
-                      onChange={(e) =>
-                        handleCantidadChange(index, Number(e.target.value))
-                      }
-                      InputProps={{ inputProps: { min: 1 } }}
-                      sx={{ width: 80 }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    ${prod.precioUnitario.toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    ${prod.subtotal.toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    <IconButton
-                      color="error"
-                      onClick={() => handleEliminarProducto(index)}
-                      disabled={loadingSave}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
+              <AnimatePresence>
+                {productosAgregados.map((prod, index) => (
+                  <motion.tr
+                    key={prod._id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.3 }}
+                    whileHover={{ scale: 1.02, backgroundColor: "#f9f9f9" }}
+                  >
+                    <TableCell>{prod.nombre}</TableCell>
+                    {!isMobile && (
+                      <TableCell>
+                        <TextField
+                          type="number"
+                          size="small"
+                          variant="outlined"
+                          value={prod.cantidad}
+                          onChange={(e) =>
+                            handleCantidadChange(index, Number(e.target.value))
+                          }
+                          InputProps={{ inputProps: { min: 1 } }}
+                          sx={{ width: 80 }}
+                        />
+                      </TableCell>
+                    )}
+                    <TableCell>${prod.precioUnitario.toLocaleString()}</TableCell>
+                    {!isMobile && <TableCell>${prod.subtotal.toLocaleString()}</TableCell>}
+                    <TableCell>
+                      <motion.div whileTap={{ scale: 0.8, rotate: -10 }}>
+                        <IconButton
+                          color="error"
+                          onClick={() => handleEliminarProducto(index)}
+                          disabled={loadingSave}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </motion.div>
+                    </TableCell>
+                  </motion.tr>
+                ))}
+              </AnimatePresence>
               {productosAgregados.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5}>
@@ -360,7 +381,13 @@ const Remitos = () => {
         <Button
           variant="contained"
           color="primary"
-          startIcon={loadingSave ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+          startIcon={
+            loadingSave ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : (
+              <SaveIcon />
+            )
+          }
           onClick={handleGuardarRemito}
           sx={{ borderRadius: 2, px: 3, py: 1.2 }}
           disabled={loadingSave}

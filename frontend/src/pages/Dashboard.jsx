@@ -20,13 +20,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import {
-  format,
-  isToday,
-  parseISO,
-  isThisWeek,
-  isThisMonth,
-} from "date-fns";
+import { format, isToday, parseISO, isThisWeek, isThisMonth } from "date-fns";
 import axios from "axios";
 
 // Iconos MUI
@@ -47,7 +41,8 @@ const Dashboard = () => {
   const [clientesTop, setClientesTop] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const API_URL = "http://localhost:5000/api/remitos";
+  // 🔹 Usar variable de entorno
+  const API_URL = (process.env.REACT_APP_API_URL || "http://localhost:5000") + "/api/remitos";
 
   useEffect(() => {
     const fetchData = async () => {
@@ -115,20 +110,18 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, []);
+  }, [API_URL]);
 
   const COLORS = ["#0088FE", "#FF8042", "#00C49F", "#FFBB28", "#AA336A"];
 
   const ventasPorTipo = [
     {
       name: "Consumidor Final",
-      value: ventas.filter((v) => v.tipoCliente === "Consumidor Final")
-        .reduce((acc, v) => acc + v.total, 0),
+      value: ventas.filter((v) => v.tipoCliente === "Consumidor Final").reduce((acc, v) => acc + v.total, 0),
     },
     {
       name: "Revendedor",
-      value: ventas.filter((v) => v.tipoCliente === "Revendedor")
-        .reduce((acc, v) => acc + v.total, 0),
+      value: ventas.filter((v) => v.tipoCliente === "Revendedor").reduce((acc, v) => acc + v.total, 0),
     },
   ];
 
@@ -215,9 +208,7 @@ const Dashboard = () => {
                     labelLine={false}
                     outerRadius={100}
                     dataKey="value"
-                    label={({ name, percent }) =>
-                      `${name} ${(percent * 100).toFixed(0)}%`
-                    }
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   >
                     {ventasPorTipo.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />

@@ -2,16 +2,12 @@ import React, { useEffect, useState } from 'react';
 import {
   Box, Typography, Table, TableHead, TableRow, TableCell,
   TableBody, IconButton, Dialog, DialogTitle, DialogContent,
-  DialogActions, TextField, Button, Paper, TableContainer, InputAdornment, MenuItem, CircularProgress
+  DialogActions, TextField, Button, Paper, TableContainer, InputAdornment, MenuItem, CircularProgress, useMediaQuery
 } from '@mui/material';
 import { Delete, Edit, Add, Search, People } from '@mui/icons-material';
-import {
-  getClientes,
-  createCliente,
-  updateCliente,
-  deleteCliente
-} from '../services/clientService';
+import { getClientes, createCliente, updateCliente, deleteCliente } from '../services/clientService';
 import DialogConfirm from '../components/DialogConfirm';
+import { motion } from 'framer-motion';
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState([]);
@@ -23,14 +19,11 @@ export default function ClientesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [tipoFilter, setTipoFilter] = useState('');
   const [loading, setLoading] = useState(true);
-  const [loadingCreate, setLoadingCreate] = useState(false); // 👈 Loading del crear
-  const [loadingEdit, setLoadingEdit] = useState(false); // 👈 Loading del editar
-  const [form, setForm] = useState({
-    nombre: '',
-    tipo: '',
-    telefono: '',
-    ubicacion: ''
-  });
+  const [loadingCreate, setLoadingCreate] = useState(false);
+  const [loadingEdit, setLoadingEdit] = useState(false);
+  const [form, setForm] = useState({ nombre: '', tipo: '', telefono: '', ubicacion: '' });
+
+  const isMobile = useMediaQuery('(max-width:600px)');
 
   const fetchClientes = async () => {
     try {
@@ -52,9 +45,7 @@ export default function ClientesPage() {
     }
   };
 
-  useEffect(() => {
-    fetchClientes();
-  }, []);
+  useEffect(() => { fetchClientes(); }, []);
 
   useEffect(() => {
     let data = clientes?.filter(c =>
@@ -66,92 +57,52 @@ export default function ClientesPage() {
     setFiltered(data);
   }, [searchTerm, tipoFilter, clientes]);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleCreateOpen = () => {
-    setForm({ nombre: '', tipo: '', telefono: '', ubicacion: '' });
-    setCreateOpen(true);
-  };
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleCreateOpen = () => { setForm({ nombre: '', tipo: '', telefono: '', ubicacion: '' }); setCreateOpen(true); };
 
   const handleCreate = async () => {
-    try {
-      setLoadingCreate(true); // 👈 empieza loading del botón
-      await createCliente(form);
-      await fetchClientes();
-      setCreateOpen(false);
-    } catch (err) {
-      console.error("Error al crear cliente:", err.response?.data || err.message);
-    } finally {
-      setLoadingCreate(false); // 👈 termina loading
-    }
+    try { setLoadingCreate(true); await createCliente(form); await fetchClientes(); setCreateOpen(false); }
+    catch (err) { console.error("Error al crear cliente:", err.response?.data || err.message); }
+    finally { setLoadingCreate(false); }
   };
 
   const handleEditOpen = (cliente) => {
     setSelectedCliente(cliente);
-    setForm({
-      nombre: cliente.nombre || '',
-      tipo: cliente.tipo || '',
-      telefono: cliente.telefono || '',
-      ubicacion: cliente.ubicacion || ''
-    });
+    setForm({ nombre: cliente.nombre || '', tipo: cliente.tipo || '', telefono: cliente.telefono || '', ubicacion: cliente.ubicacion || '' });
     setEditOpen(true);
   };
 
   const handleEdit = async () => {
-    try {
-      setLoadingEdit(true); // 👈 empieza loading del botón
-      await updateCliente(selectedCliente._id, form);
-      await fetchClientes();
-      setEditOpen(false);
-    } catch (err) {
-      console.error("Error al editar cliente:", err.response?.data || err.message);
-    } finally {
-      setLoadingEdit(false); // 👈 termina loading
-    }
+    try { setLoadingEdit(true); await updateCliente(selectedCliente._id, form); await fetchClientes(); setEditOpen(false); }
+    catch (err) { console.error("Error al editar cliente:", err.response?.data || err.message); }
+    finally { setLoadingEdit(false); }
   };
 
-  const handleDeleteClick = (cliente) => {
-    setSelectedCliente(cliente);
-    setConfirmOpen(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    await deleteCliente(selectedCliente._id);
-    fetchClientes();
-    setConfirmOpen(false);
-    setSelectedCliente(null);
-  };
+  const handleDeleteClick = (cliente) => { setSelectedCliente(cliente); setConfirmOpen(true); };
+  const handleConfirmDelete = async () => { await deleteCliente(selectedCliente._id); fetchClientes(); setConfirmOpen(false); setSelectedCliente(null); };
 
   return (
-    <Box p={3} sx={{ width: '100%', maxWidth: '100%' }}>
+    <Box p={isMobile ? 2 : 3} sx={{ width: '100%', maxWidth: '100%' }}>
       {/* Header con icono y botón */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} sx={{ width: '100%' }}>
+      <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} justifyContent="space-between" alignItems={isMobile ? 'stretch' : 'center'} mb={2} gap={isMobile ? 1 : 0}>
         <Box display="flex" alignItems="center" gap={1}>
           <People color="primary" />
-          <Typography variant="h5" fontWeight="bold">Lista de Clientes</Typography>
+          <Typography variant={isMobile ? "h6" : "h5"} fontWeight="bold">Lista de Clientes</Typography>
         </Box>
-        <Button variant="contained" startIcon={<Add />} onClick={handleCreateOpen}>
+        <Button variant="contained" startIcon={<Add />} onClick={handleCreateOpen} sx={{ mt: isMobile ? 1 : 0 }}>
           Agregar Cliente
         </Button>
       </Box>
 
       {/* Barra de búsqueda y filtro */}
-      <Box display="flex" gap={2} mb={2} sx={{ width: '100%' }}>
+      <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} gap={2} mb={2}>
         <TextField
           variant="outlined"
           placeholder="Buscar cliente por nombre..."
-          sx={{ flexGrow: 1 }}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search />
-              </InputAdornment>
-            )
-          }}
+          InputProps={{ startAdornment: (<InputAdornment position="start"><Search /></InputAdornment>) }}
+          fullWidth
         />
         <TextField
           select
@@ -159,7 +110,7 @@ export default function ClientesPage() {
           label="Tipo"
           value={tipoFilter}
           onChange={(e) => setTipoFilter(e.target.value)}
-          sx={{ minWidth: 200 }}
+          sx={{ minWidth: isMobile ? '100%' : 200 }}
         >
           <MenuItem value="">Todos</MenuItem>
           <MenuItem value="Consumidor Final">Consumidor Final</MenuItem>
@@ -173,52 +124,50 @@ export default function ClientesPage() {
           <CircularProgress size={60} />
         </Box>
       ) : (
-        <Paper elevation={3} sx={{ width: '100%' }}>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                  <TableCell><strong>Nombre</strong></TableCell>
-                  <TableCell><strong>Tipo</strong></TableCell>
-                  <TableCell><strong>Teléfono</strong></TableCell>
-                  <TableCell><strong>Dirección</strong></TableCell>
-                  <TableCell><strong>Acciones</strong></TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {(filtered || []).map((cliente) => (
-                  <TableRow key={cliente._id} hover>
-                    <TableCell>{cliente.nombre}</TableCell>
-                    <TableCell>{cliente.tipo}</TableCell>
-                    <TableCell>{cliente.telefono}</TableCell>
-                    <TableCell>{cliente.ubicacion}</TableCell>
-                    <TableCell>
-                      <IconButton onClick={() => handleEditOpen(cliente)} color="primary">
-                        <Edit />
-                      </IconButton>
-                      <IconButton onClick={() => handleDeleteClick(cliente)} color="error">
-                        <Delete />
-                      </IconButton>
-                    </TableCell>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+          <Paper elevation={3} sx={{ width: '100%', overflowX: 'auto' }}>
+            <TableContainer>
+              <Table sx={{ minWidth: 650 }}>
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                    <TableCell><strong>Nombre</strong></TableCell>
+                    <TableCell><strong>Tipo</strong></TableCell>
+                    {!isMobile && <TableCell><strong>Teléfono</strong></TableCell>}
+                    {!isMobile && <TableCell><strong>Dirección</strong></TableCell>}
+                    <TableCell><strong>Acciones</strong></TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
+                </TableHead>
+                <TableBody>
+                  {filtered.map((cliente) => (
+                    <TableRow key={cliente._id} hover>
+                      <TableCell>{cliente.nombre}</TableCell>
+                      <TableCell>{cliente.tipo}</TableCell>
+                      {!isMobile && <TableCell>{cliente.telefono}</TableCell>}
+                      {!isMobile && <TableCell>{cliente.ubicacion}</TableCell>}
+                      <TableCell>
+                        <IconButton onClick={() => handleEditOpen(cliente)} color="primary"><Edit /></IconButton>
+                        <IconButton onClick={() => handleDeleteClick(cliente)} color="error"><Delete /></IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+        </motion.div>
       )}
 
       {/* Dialog crear */}
-      <Dialog open={createOpen} onClose={() => setCreateOpen(false)}>
+      <Dialog fullWidth maxWidth="sm" open={createOpen} onClose={() => setCreateOpen(false)}>
         <DialogTitle>Agregar Cliente</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-          <TextField label="Nombre" name="nombre" value={form.nombre} onChange={handleChange} />
-          <TextField select label="Tipo" name="tipo" value={form.tipo} onChange={handleChange}>
+          <TextField label="Nombre" name="nombre" value={form.nombre} onChange={handleChange} fullWidth />
+          <TextField select label="Tipo" name="tipo" value={form.tipo} onChange={handleChange} fullWidth>
             <MenuItem value="Consumidor Final">Consumidor Final</MenuItem>
             <MenuItem value="Revendedor">Revendedor</MenuItem>
           </TextField>
-          <TextField label="Teléfono" name="telefono" value={form.telefono} onChange={handleChange} />
-          <TextField label="Dirección" name="ubicacion" value={form.ubicacion} onChange={handleChange} />
+          <TextField label="Teléfono" name="telefono" value={form.telefono} onChange={handleChange} fullWidth />
+          <TextField label="Dirección" name="ubicacion" value={form.ubicacion} onChange={handleChange} fullWidth />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setCreateOpen(false)} disabled={loadingCreate}>Cancelar</Button>
@@ -234,16 +183,16 @@ export default function ClientesPage() {
       </Dialog>
 
       {/* Dialog editar */}
-      <Dialog open={editOpen} onClose={() => setEditOpen(false)}>
+      <Dialog fullWidth maxWidth="sm" open={editOpen} onClose={() => setEditOpen(false)}>
         <DialogTitle>Editar Cliente</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-          <TextField label="Nombre" name="nombre" value={form.nombre} onChange={handleChange} />
-          <TextField select label="Tipo" name="tipo" value={form.tipo} onChange={handleChange}>
+          <TextField label="Nombre" name="nombre" value={form.nombre} onChange={handleChange} fullWidth />
+          <TextField select label="Tipo" name="tipo" value={form.tipo} onChange={handleChange} fullWidth>
             <MenuItem value="Consumidor Final">Consumidor Final</MenuItem>
             <MenuItem value="Revendedor">Revendedor</MenuItem>
           </TextField>
-          <TextField label="Teléfono" name="telefono" value={form.telefono} onChange={handleChange} />
-          <TextField label="Dirección" name="ubicacion" value={form.ubicacion} onChange={handleChange} />
+          <TextField label="Teléfono" name="telefono" value={form.telefono} onChange={handleChange} fullWidth />
+          <TextField label="Dirección" name="ubicacion" value={form.ubicacion} onChange={handleChange} fullWidth />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditOpen(false)} disabled={loadingEdit}>Cancelar</Button>
@@ -259,12 +208,7 @@ export default function ClientesPage() {
       </Dialog>
 
       {/* Dialog confirmar */}
-      <DialogConfirm
-        open={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
-        onConfirm={handleConfirmDelete}
-        message="¿Estás seguro que deseas eliminar este cliente?"
-      />
+      <DialogConfirm open={confirmOpen} onClose={() => setConfirmOpen(false)} onConfirm={handleConfirmDelete} message="¿Estás seguro que deseas eliminar este cliente?" />
     </Box>
   );
 }

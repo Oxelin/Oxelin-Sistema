@@ -4,8 +4,9 @@ import {
   FormControl, InputLabel, Select, MenuItem,
   Button, TableContainer, Table, TableHead, TextField,
   TableRow, TableCell, TableBody, IconButton, Tooltip, InputAdornment, Dialog,
-  DialogActions, DialogTitle, Collapse, Pagination, CircularProgress
+  DialogActions, DialogTitle, Collapse, Pagination, CircularProgress, useMediaQuery
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { obtenerRemitos, eliminarRemito } from '../services/remitoService';
 import PrintIcon from '@mui/icons-material/Print';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -26,9 +27,12 @@ const ListaRemitos = () => {
   const [openRows, setOpenRows] = useState({});
   const [confirmDialog, setConfirmDialog] = useState({ open: false, id: null });
   const [paginaActual, setPaginaActual] = useState(1);
-  const [loading, setLoading] = useState(true);          // 🟢 estado de carga general
-  const [loadingDelete, setLoadingDelete] = useState(false); // 🟢 estado de eliminación
+  const [loading, setLoading] = useState(true);
+  const [loadingDelete, setLoadingDelete] = useState(false);
+
   const remitosPorPagina = 5;
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     const fetchRemitos = async () => {
@@ -155,6 +159,7 @@ const ListaRemitos = () => {
 
   return (
     <Box sx={{ p: 3, width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
+      {/* Filtros */}
       <Paper sx={{ p: 3, mb: 3, width: '100%' }} elevation={3}>
         <Typography variant="h5" fontWeight="bold" gutterBottom>
           Lista de Remitos
@@ -215,6 +220,7 @@ const ListaRemitos = () => {
         </Grid>
       </Paper>
 
+      {/* Totales */}
       <Paper sx={{ p: 3, mb: 3 }} elevation={2}>
         <Typography variant="h6" gutterBottom>Totales</Typography>
         <Grid container spacing={2}>
@@ -231,86 +237,150 @@ const ListaRemitos = () => {
         </Grid>
       </Paper>
 
-      <TableContainer component={Paper} elevation={2}>
-        <Table>
-          <TableHead sx={{ background: '#f0f0f0' }}>
-            <TableRow>
-              <TableCell />
-              <TableCell>Cliente</TableCell>
-              <TableCell>Tipo</TableCell>
-              <TableCell>Fecha</TableCell>
-              <TableCell>Total</TableCell>
-              <TableCell>Acciones</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {remitosPaginados.map(r => {
-              const total = r.productos.reduce((s, i) => s + i.subtotal, 0);
-              return (
-                <React.Fragment key={r._id}>
-                  <TableRow hover>
-                    <TableCell>
-                      <Tooltip title="Ver productos">
-                        <IconButton size="small" onClick={() => extensible(r._id)}>
-                          {openRows[r._id] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                    <TableCell>{r.cliente?.nombre ?? 'Cliente desconocido'}</TableCell>
-                    <TableCell>{formatearTipoPrecio(r.tipoPrecio)}</TableCell>
-                    <TableCell>{format(parseISO(r.fecha), 'dd/MM/yyyy')}</TableCell>
-                    <TableCell>${total.toLocaleString()}</TableCell>
-                    <TableCell>
-                      <Tooltip title="Imprimir">
-                        <IconButton color="primary" onClick={() => exportRemitoPDF(r)}>
-                          <PrintIcon />
-                        </IconButton>
-                      </Tooltip>
+      {/* Lista responsiva */}
+      {isMobile ? (
+        <Box display="flex" flexDirection="column" gap={2}>
+          {remitosPaginados.map(r => {
+            const total = r.productos.reduce((s, i) => s + i.subtotal, 0);
+            return (
+              <Paper key={r._id} sx={{ p: 2 }}>
+                <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Typography variant="subtitle1" fontWeight="bold">
+                    {r.cliente?.nombre ?? 'Cliente desconocido'}
+                  </Typography>
+                  <IconButton size="small" onClick={() => extensible(r._id)}>
+                    {openRows[r._id] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                  </IconButton>
+                </Box>
+                <Typography variant="body2">Tipo: {formatearTipoPrecio(r.tipoPrecio)}</Typography>
+                <Typography variant="body2">Fecha: {format(parseISO(r.fecha), 'dd/MM/yyyy')}</Typography>
+                <Typography variant="body2" fontWeight="bold">Total: ${total.toLocaleString()}</Typography>
 
-                      <Tooltip title="Eliminar">
-                        <span>
-                          <IconButton
-                            color="error"
-                            onClick={() => confirmarEliminar(r._id)}
-                            disabled={loadingDelete}
-                          >
-                            {loadingDelete && confirmDialog.id === r._id
-                              ? <CircularProgress size={20} color="inherit" />
-                              : <DeleteIcon />}
-                          </IconButton>
-                        </span>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell colSpan={6} sx={{ p: 0 }}>
-                      <Collapse in={openRows[r._id]} timeout="auto" unmountOnExit>
-                        <Box sx={{ background: '#f5f5f5', px: 3, py: 2 }}>
-                          <Typography variant="subtitle2" gutterBottom>Productos:</Typography>
-                          {r.productos.map((i, idx) => (
-                            <Typography key={idx} variant="body2" sx={{ pl: 2 }}>
-                              {`${i.producto?.nombre ?? 'Producto desconocido'} — Cant: ${i.cantidad} — Subtotal: $${i.subtotal}`}
-                            </Typography>
-                          ))}
-                        </Box>
-                      </Collapse>
-                    </TableCell>
-                  </TableRow>
-                </React.Fragment>
-              );
-            })}
-          </TableBody>
-        </Table>
-        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-          <Pagination
-            count={totalPaginas}
-            page={paginaActual}
-            onChange={(e, val) => setPaginaActual(val)}
-            color="primary"
-          />
+                <Box display="flex" justifyContent="flex-end" mt={1}>
+                  <Tooltip title="Imprimir">
+                    <IconButton color="primary" onClick={() => exportRemitoPDF(r)}>
+                      <PrintIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Eliminar">
+                    <span>
+                      <IconButton
+                        color="error"
+                        onClick={() => confirmarEliminar(r._id)}
+                        disabled={loadingDelete}
+                      >
+                        {loadingDelete && confirmDialog.id === r._id
+                          ? <CircularProgress size={20} color="inherit" />
+                          : <DeleteIcon />}
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                </Box>
+
+                <Collapse in={openRows[r._id]} timeout="auto" unmountOnExit>
+                  <Box sx={{ background: '#f5f5f5', p: 2, mt: 1, borderRadius: 1 }}>
+                    <Typography variant="subtitle2" gutterBottom>Productos:</Typography>
+                    {r.productos.map((i, idx) => (
+                      <Typography key={idx} variant="body2">
+                        {`${i.producto?.nombre ?? 'Producto desconocido'} — Cant: ${i.cantidad} — Subtotal: $${i.subtotal}`}
+                      </Typography>
+                    ))}
+                  </Box>
+                </Collapse>
+              </Paper>
+            );
+          })}
+          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+            <Pagination
+              count={totalPaginas}
+              page={paginaActual}
+              onChange={(e, val) => setPaginaActual(val)}
+              color="primary"
+            />
+          </Box>
         </Box>
-      </TableContainer>
+      ) : (
+        <TableContainer component={Paper} elevation={2}>
+          <Table>
+            <TableHead sx={{ background: '#f0f0f0' }}>
+              <TableRow>
+                <TableCell />
+                <TableCell>Cliente</TableCell>
+                <TableCell>Tipo</TableCell>
+                <TableCell>Fecha</TableCell>
+                <TableCell>Total</TableCell>
+                <TableCell>Acciones</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {remitosPaginados.map(r => {
+                const total = r.productos.reduce((s, i) => s + i.subtotal, 0);
+                return (
+                  <React.Fragment key={r._id}>
+                    <TableRow hover>
+                      <TableCell>
+                        <Tooltip title="Ver productos">
+                          <IconButton size="small" onClick={() => extensible(r._id)}>
+                            {openRows[r._id] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell>{r.cliente?.nombre ?? 'Cliente desconocido'}</TableCell>
+                      <TableCell>{formatearTipoPrecio(r.tipoPrecio)}</TableCell>
+                      <TableCell>{format(parseISO(r.fecha), 'dd/MM/yyyy')}</TableCell>
+                      <TableCell>${total.toLocaleString()}</TableCell>
+                      <TableCell>
+                        <Tooltip title="Imprimir">
+                          <IconButton color="primary" onClick={() => exportRemitoPDF(r)}>
+                            <PrintIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Eliminar">
+                          <span>
+                            <IconButton
+                              color="error"
+                              onClick={() => confirmarEliminar(r._id)}
+                              disabled={loadingDelete}
+                            >
+                              {loadingDelete && confirmDialog.id === r._id
+                                ? <CircularProgress size={20} color="inherit" />
+                                : <DeleteIcon />}
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell colSpan={6} sx={{ p: 0 }}>
+                        <Collapse in={openRows[r._id]} timeout="auto" unmountOnExit>
+                          <Box sx={{ background: '#f5f5f5', px: 3, py: 2 }}>
+                            <Typography variant="subtitle2" gutterBottom>Productos:</Typography>
+                            {r.productos.map((i, idx) => (
+                              <Typography key={idx} variant="body2" sx={{ pl: 2 }}>
+                                {`${i.producto?.nombre ?? 'Producto desconocido'} — Cant: ${i.cantidad} — Subtotal: $${i.subtotal}`}
+                              </Typography>
+                            ))}
+                          </Box>
+                        </Collapse>
+                      </TableCell>
+                    </TableRow>
+                  </React.Fragment>
+                );
+              })}
+            </TableBody>
+          </Table>
+          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+            <Pagination
+              count={totalPaginas}
+              page={paginaActual}
+              onChange={(e, val) => setPaginaActual(val)}
+              color="primary"
+            />
+          </Box>
+        </TableContainer>
+      )}
 
+      {/* Confirmar eliminación */}
       <Dialog
         open={confirmDialog.open}
         onClose={() => setConfirmDialog({ open: false, id: null })}

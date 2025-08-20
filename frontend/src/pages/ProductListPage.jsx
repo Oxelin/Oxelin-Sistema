@@ -3,18 +3,17 @@ import {
   Box, Typography, Table, TableHead, TableRow, TableCell,
   TableBody, IconButton, Dialog, DialogTitle, DialogContent,
   DialogActions, TextField, Button, Paper, InputAdornment,
-  CircularProgress, useMediaQuery, TableContainer
+  CircularProgress, useMediaQuery, TableContainer, Card, CardContent
 } from "@mui/material";
 import { Delete, Edit, Add, Search } from "@mui/icons-material";
 import { getProductos, crearProducto, actualizarProducto, eliminarProducto } from "../services/productService";
 import DialogConfirm from "../components/DialogConfirm";
 import { toast } from "react-toastify";
-import { motion } from "framer-motion";
 
 export default function ProductListPage() {
   const [productos, setProductos] = useState([]);
   const [filteredProductos, setFilteredProductos] = useState([]);
-  the const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -177,30 +176,45 @@ export default function ProductListPage() {
         <>
           {isMobile ? (
             // 📱 Cards en móvil
-            <Box display="flex" flexDirection="column" gap={2}>
+            <Box display="grid" gap={2}>
               {filteredProductos.map((prod) => (
-                <Paper key={prod._id} sx={{ p: 2 }}>
-                  <Typography variant="subtitle1" fontWeight="bold">
-                    {prod.nombre}
-                  </Typography>
-                  {prod.stock !== undefined && (
-                    <Typography variant="body2">Stock: {prod.stock}</Typography>
-                  )}
-                  {prod.precioConsumidorFinal !== undefined && (
-                    <Typography variant="body2">Precio consumidor: ${prod.precioConsumidorFinal}</Typography>
-                  )}
-                  {prod.precioRevendedor !== undefined && (
-                    <Typography variant="body2">Precio revendedor: ${prod.precioRevendedor}</Typography>
-                  )}
-                  <Box display="flex" justifyContent="flex-end" mt={1}>
-                    <IconButton onClick={() => handleEditOpen(prod)} color="primary">
-                      <Edit />
-                    </IconButton>
-                    <IconButton onClick={() => handleDeleteClick(prod)} color="error">
-                      <Delete />
-                    </IconButton>
-                  </Box>
-                </Paper>
+                <Card
+                  key={prod._id}
+                  variant="outlined"
+                  sx={{
+                    borderRadius: 3,
+                    boxShadow: 2,
+                  }}
+                >
+                  <CardContent>
+                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+                      {prod.nombre}
+                    </Typography>
+                    {prod.stock !== undefined && (
+                      <Typography variant="body2" color="text.secondary">
+                        Stock: {prod.stock}
+                      </Typography>
+                    )}
+                    {prod.precioConsumidorFinal !== undefined && (
+                      <Typography variant="body2" color="text.secondary">
+                        Precio consumidor: ${prod.precioConsumidorFinal}
+                      </Typography>
+                    )}
+                    {prod.precioRevendedor !== undefined && (
+                      <Typography variant="body2" color="text.secondary">
+                        Precio revendedor: ${prod.precioRevendedor}
+                      </Typography>
+                    )}
+                    <Box display="flex" justifyContent="flex-end" mt={2}>
+                      <IconButton onClick={() => handleEditOpen(prod)} color="primary">
+                        <Edit />
+                      </IconButton>
+                      <IconButton onClick={() => handleDeleteClick(prod)} color="error">
+                        <Delete />
+                      </IconButton>
+                    </Box>
+                  </CardContent>
+                </Card>
               ))}
             </Box>
           ) : (

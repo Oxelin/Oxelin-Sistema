@@ -36,6 +36,7 @@ export default function Sidebar({ open, setOpen, isMobile }) {
     { text: "Clientes", icon: <PeopleIcon />, path: "/clientes" },
     { text: "Remitos", icon: <AttachMoneyIcon />, path: "/remitos" }, // <- cambiado
     { text: "Lista de remitos", icon: <ReceiptIcon />, path: "/lista-remitos" }, // <- cambiado
+    { text: "Costos", icon: <AttachMoneyIcon />, path: "/costos" },
   ];
 
   const drawerContent = (

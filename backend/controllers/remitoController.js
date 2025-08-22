@@ -32,15 +32,13 @@ exports.crearRemito = async (req, res) => {
   }
 };
 
-
 exports.obtenerRemitos = async (req, res) => {
   try {
     const remitos = await Remito.find()
-      .populate('cliente', 'nombre tipo') // Traemos solo lo necesario
+      .populate('cliente', 'nombre tipo')
       .populate('productos.producto')
-      .lean(); // Convierte a objetos JS para poder modificar
+      .lean();
 
-    // Agregar tipoCliente como campo plano
     const remitosConTipo = remitos.map(r => ({
       ...r,
       tipoCliente: r.cliente.tipo
@@ -53,7 +51,6 @@ exports.obtenerRemitos = async (req, res) => {
   }
 };
 
-
 exports.eliminarRemito = async (req, res) => {
   try {
     const { id } = req.params;
@@ -64,3 +61,50 @@ exports.eliminarRemito = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// 🔹 NUEVA FUNCIÓN: calcular costos con filtros
+exports.obtenerCostos = async (req, res) => {
+  try {
+    const { clienteId, fechaInicio, fechaFin } = req.query; // vienen de la URL
+
+    // Armamos el filtro dinámico
+    let filtro = {};
+
+    if (clienteId) {
+      filtro.cliente = clienteId;
+    }
+
+    if (fechaInicio || fechaFin) {
+      filtro.fecha = {};
+      if (fechaInicio) filtro.fecha.$gte = new Date(fechaInicio);
+      if (fechaFin) filtro.fecha.$lte = new Date(fechaFin);
+    }
+
+    const remitos = await Remito.find(filtro)
+      .populate("cliente", "nombre")
+      .populate("productos.producto", "nombre costo");
+
+    let totalCostos = 0;
+
+    const remitosConCostos = remitos.map((r) => {
+      const totalCostoRemito = r.productos.reduce((acc, p) => {
+        return acc + (p.producto?.costo || 0) * p.cantidad;
+      }, 0);
+
+      totalCostos += totalCostoRemito;
+
+      return {
+        _id: r._id,
+        cliente: r.cliente?.nombre || "Sin cliente",
+        fecha: r.fecha,
+        totalCosto: totalCostoRemito,
+      };
+    });
+
+    res.json({ totalCostos, remitos: remitosConCostos });
+  } catch (err) {
+    console.error("Error al calcular costos:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+

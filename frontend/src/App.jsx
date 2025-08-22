@@ -9,6 +9,7 @@ import ProductListPage from "./pages/ProductListPage";
 import ClientesPage from "./pages/ClientesPage";
 import Remitos from "./pages/Remitos";
 import ListaRemitos from "./components/ListaRemitos";
+import Costos from "./pages/Costos"; // <- Nueva página
 
 import LayoutWrapper from "./components/LayoutWrapper";
 import PrivateRoute from "./components/PrivateRoute";
@@ -34,6 +35,7 @@ export default function App() {
         <Route path="clientes" element={<ClientesPage />} />
         <Route path="remitos" element={<Remitos />} />
         <Route path="lista-remitos" element={<ListaRemitos />} />
+        <Route path="costos" element={<Costos />} /> {/* <- Nueva ruta */}
       </Route>
     </Routes>
   );

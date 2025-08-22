@@ -16,3 +16,10 @@ export const obtenerRemitos = async () => {
 export const eliminarRemito = async (id) => {
   return await axios.delete(`${BASE_URL}/${id}`);
 };
+
+// 🔹 Nueva función para obtener costos
+export const obtenerCostos = async (query = '') => {
+  // query es un string con los parámetros URL, ej: "clienteId=xxx&fechaInicio=2025-08-01&fechaFin=2025-08-31"
+  const url = query ? `${BASE_URL}/costos?${query}` : `${BASE_URL}/costos`;
+  return await axios.get(url);
+};

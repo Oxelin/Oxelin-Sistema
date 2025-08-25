@@ -27,7 +27,6 @@ export default function ProductListPage() {
     costo: "",
     precioConsumidorFinal: "",
     precioRevendedor: "",
-    stock: "",
   });
 
   const isMobile = useMediaQuery("(max-width:600px)");
@@ -64,7 +63,6 @@ export default function ProductListPage() {
       costo: "",
       precioConsumidorFinal: "",
       precioRevendedor: "",
-      stock: "",
     });
     setCreateOpen(true);
   };
@@ -91,7 +89,6 @@ export default function ProductListPage() {
       costo: producto.costo ?? "",
       precioConsumidorFinal: producto.precioConsumidorFinal ?? "",
       precioRevendedor: producto.precioRevendedor ?? "",
-      stock: producto.stock ?? "",
     });
     setEditOpen(true);
   };
@@ -190,11 +187,6 @@ export default function ProductListPage() {
                     <Typography variant="h6" fontWeight="bold" gutterBottom>
                       {prod.nombre}
                     </Typography>
-                    {prod.stock !== undefined && (
-                      <Typography variant="body2" color="text.secondary">
-                        Stock: {prod.stock}
-                      </Typography>
-                    )}
                     {prod.precioConsumidorFinal !== undefined && (
                       <Typography variant="body2" color="text.secondary">
                         Precio consumidor: ${prod.precioConsumidorFinal}
@@ -228,7 +220,6 @@ export default function ProductListPage() {
                       <TableCell><strong>Costo</strong></TableCell>
                       <TableCell><strong>Precio Consumidor</strong></TableCell>
                       <TableCell><strong>Precio Revendedor</strong></TableCell>
-                      <TableCell><strong>Stock</strong></TableCell>
                       <TableCell><strong>Acciones</strong></TableCell>
                     </TableRow>
                   </TableHead>
@@ -239,7 +230,6 @@ export default function ProductListPage() {
                         <TableCell sx={{ p: 1.5 }}>{prod.costo}</TableCell>
                         <TableCell sx={{ p: 1.5 }}>{prod.precioConsumidorFinal}</TableCell>
                         <TableCell sx={{ p: 1.5 }}>{prod.precioRevendedor}</TableCell>
-                        <TableCell sx={{ p: 1.5 }}>{prod.stock}</TableCell>
                         <TableCell sx={{ p: 1.5 }}>
                           <IconButton onClick={() => handleEditOpen(prod)} color="primary">
                             <Edit />
@@ -262,7 +252,7 @@ export default function ProductListPage() {
       <Dialog open={createOpen} onClose={() => setCreateOpen(false)}>
         <DialogTitle>Agregar Producto</DialogTitle>
         <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
-          {["nombre", "costo", "precioConsumidorFinal", "precioRevendedor", "stock"].map((field) => (
+          {["nombre", "costo", "precioConsumidorFinal", "precioRevendedor"].map((field) => (
             <TextField
               key={field}
               label={
@@ -273,7 +263,7 @@ export default function ProductListPage() {
                   : field.charAt(0).toUpperCase() + field.slice(1)
               }
               name={field}
-              type={["costo", "precioConsumidorFinal", "precioRevendedor", "stock"].includes(field) ? "number" : "text"}
+              type={["costo", "precioConsumidorFinal", "precioRevendedor"].includes(field) ? "number" : "text"}
               value={form[field]}
               onChange={handleChange}
               fullWidth
@@ -299,7 +289,7 @@ export default function ProductListPage() {
       <Dialog open={editOpen} onClose={() => setEditOpen(false)}>
         <DialogTitle>Editar Producto</DialogTitle>
         <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
-          {["nombre", "costo", "precioConsumidorFinal", "precioRevendedor", "stock"].map((field) => (
+          {["nombre", "costo", "precioConsumidorFinal", "precioRevendedor"].map((field) => (
             <TextField
               key={field}
               label={
@@ -310,7 +300,7 @@ export default function ProductListPage() {
                   : field.charAt(0).toUpperCase() + field.slice(1)
               }
               name={field}
-              type={["costo", "precioConsumidorFinal", "precioRevendedor", "stock"].includes(field) ? "number" : "text"}
+              type={["costo", "precioConsumidorFinal", "precioRevendedor"].includes(field) ? "number" : "text"}
               value={form[field]}
               onChange={handleChange}
               fullWidth

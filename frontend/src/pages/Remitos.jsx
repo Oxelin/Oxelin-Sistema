@@ -158,6 +158,23 @@ const Remitos = () => {
   const calcularTotal = () =>
     productosAgregados.reduce((sum, p) => sum + p.subtotal, 0);
 
+  // 🔹 Loading inicial cuando aún se cargan clientes o productos
+  if (loadingClientes || loadingProductos) {
+    return (
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          bgcolor: "#f5f5f5",
+        }}
+      >
+        <CircularProgress size={50} color="primary" />
+      </Box>
+    );
+  }
+
   return (
     <Box
       sx={{
@@ -203,7 +220,6 @@ const Remitos = () => {
           }
           value={clienteSeleccionado}
           onChange={(e, newValue) => setClienteSeleccionado(newValue)}
-          loading={loadingClientes}
           renderInput={(params) => (
             <TextField
               {...params}
@@ -212,14 +228,6 @@ const Remitos = () => {
               fullWidth
               InputProps={{
                 ...params.InputProps,
-                endAdornment: (
-                  <>
-                    {loadingClientes && (
-                      <CircularProgress color="inherit" size={20} />
-                    )}
-                    {params.InputProps.endAdornment}
-                  </>
-                ),
                 startAdornment: (
                   <InputAdornment position="start">
                     <PersonIcon />
@@ -260,7 +268,6 @@ const Remitos = () => {
           options={productos}
           getOptionLabel={(option) => option.nombre || ""}
           onChange={handleProductoSeleccionado}
-          loading={loadingProductos}
           renderInput={(params) => (
             <TextField
               {...params}
@@ -269,14 +276,6 @@ const Remitos = () => {
               fullWidth
               InputProps={{
                 ...params.InputProps,
-                endAdornment: (
-                  <>
-                    {loadingProductos && (
-                      <CircularProgress color="inherit" size={20} />
-                    )}
-                    {params.InputProps.endAdornment}
-                  </>
-                ),
                 startAdornment: (
                   <InputAdornment position="start">
                     <ShoppingCartIcon />

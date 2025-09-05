@@ -21,7 +21,6 @@ import {
   Fade,
   CircularProgress,
   useMediaQuery,
-  Stack,
 } from "@mui/material";
 import {
   Delete as DeleteIcon,
@@ -158,23 +157,6 @@ const Remitos = () => {
   const calcularTotal = () =>
     productosAgregados.reduce((sum, p) => sum + p.subtotal, 0);
 
-  // 🔹 Loading inicial cuando aún se cargan clientes o productos
-  if (loadingClientes || loadingProductos) {
-    return (
-      <Box
-        sx={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          bgcolor: "#f5f5f5",
-        }}
-      >
-        <CircularProgress size={50} color="primary" />
-      </Box>
-    );
-  }
-
   return (
     <Box
       sx={{
@@ -220,6 +202,7 @@ const Remitos = () => {
           }
           value={clienteSeleccionado}
           onChange={(e, newValue) => setClienteSeleccionado(newValue)}
+          loading={loadingClientes}
           renderInput={(params) => (
             <TextField
               {...params}
@@ -228,6 +211,14 @@ const Remitos = () => {
               fullWidth
               InputProps={{
                 ...params.InputProps,
+                endAdornment: (
+                  <>
+                    {loadingClientes && (
+                      <CircularProgress color="inherit" size={20} />
+                    )}
+                    {params.InputProps.endAdornment}
+                  </>
+                ),
                 startAdornment: (
                   <InputAdornment position="start">
                     <PersonIcon />
@@ -268,6 +259,7 @@ const Remitos = () => {
           options={productos}
           getOptionLabel={(option) => option.nombre || ""}
           onChange={handleProductoSeleccionado}
+          loading={loadingProductos}
           renderInput={(params) => (
             <TextField
               {...params}
@@ -276,6 +268,14 @@ const Remitos = () => {
               fullWidth
               InputProps={{
                 ...params.InputProps,
+                endAdornment: (
+                  <>
+                    {loadingProductos && (
+                      <CircularProgress color="inherit" size={20} />
+                    )}
+                    {params.InputProps.endAdornment}
+                  </>
+                ),
                 startAdornment: (
                   <InputAdornment position="start">
                     <ShoppingCartIcon />
@@ -287,99 +287,41 @@ const Remitos = () => {
         />
       </Box>
 
-      {/* Productos */}
+      {/* Tabla */}
       <Fade in>
-        <>
-          {/* Desktop - Tabla */}
-          {!isMobile && (
-            <TableContainer
-              component={Paper}
-              elevation={3}
-              sx={{
-                borderRadius: 2,
-                mb: 2,
-                overflowX: "auto",
-              }}
-            >
-              <Table size="medium">
-                <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
-                  <TableRow>
-                    <TableCell><b>Producto</b></TableCell>
-                    <TableCell><b>Cantidad</b></TableCell>
-                    <TableCell><b>Precio Unitario</b></TableCell>
-                    <TableCell><b>Subtotal</b></TableCell>
-                    <TableCell><b>Acciones</b></TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  <AnimatePresence>
-                    {productosAgregados.map((prod, index) => (
-                      <motion.tr
-                        key={prod._id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        transition={{ duration: 0.3 }}
-                        whileHover={{ scale: 1.02, backgroundColor: "#f9f9f9" }}
-                      >
-                        <TableCell>{prod.nombre}</TableCell>
-                        <TableCell>
-                          <TextField
-                            type="number"
-                            size="small"
-                            variant="outlined"
-                            value={prod.cantidad}
-                            onChange={(e) =>
-                              handleCantidadChange(index, Number(e.target.value))
-                            }
-                            InputProps={{ inputProps: { min: 1 } }}
-                            sx={{ width: 80 }}
-                          />
-                        </TableCell>
-                        <TableCell>${prod.precioUnitario.toLocaleString()}</TableCell>
-                        <TableCell>${prod.subtotal.toLocaleString()}</TableCell>
-                        <TableCell>
-                          <motion.div whileTap={{ scale: 0.8, rotate: -10 }}>
-                            <IconButton
-                              color="error"
-                              onClick={() => handleEliminarProducto(index)}
-                              disabled={loadingSave}
-                            >
-                              <DeleteIcon />
-                            </IconButton>
-                          </motion.div>
-                        </TableCell>
-                      </motion.tr>
-                    ))}
-                  </AnimatePresence>
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-
-          {/* Mobile - Cards */}
-          {isMobile && (
-            <Stack spacing={2}>
-              {productosAgregados.map((prod, index) => (
-                <motion.div
-                  key={prod._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Paper
-                    elevation={3}
-                    sx={{
-                      p: 2,
-                      borderRadius: 2,
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                    }}
+        <TableContainer
+          component={Paper}
+          elevation={3}
+          sx={{
+            borderRadius: 2,
+            mb: 2,
+            overflowX: "auto",
+          }}
+        >
+          <Table size={isMobile ? "small" : "medium"}>
+            <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
+              <TableRow>
+                <TableCell><b>Producto</b></TableCell>
+                {!isMobile && <TableCell><b>Cantidad</b></TableCell>}
+                <TableCell><b>Precio Unitario</b></TableCell>
+                {!isMobile && <TableCell><b>Subtotal</b></TableCell>}
+                <TableCell><b>Acciones</b></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <AnimatePresence>
+                {productosAgregados.map((prod, index) => (
+                  <motion.tr
+                    key={prod._id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.3 }}
+                    whileHover={{ scale: 1.02, backgroundColor: "#f9f9f9" }}
                   >
-                    <Stack spacing={1}>
-                      <Typography fontWeight={600}>{prod.nombre}</Typography>
-
-                      <Box display="flex" alignItems="center" gap={1}>
+                    <TableCell>{prod.nombre}</TableCell>
+                    {!isMobile && (
+                      <TableCell>
                         <TextField
                           type="number"
                           size="small"
@@ -391,16 +333,12 @@ const Remitos = () => {
                           InputProps={{ inputProps: { min: 1 } }}
                           sx={{ width: 80 }}
                         />
-                        <Typography>
-                          x ${prod.precioUnitario.toLocaleString()}
-                        </Typography>
-                      </Box>
-
-                      <Typography fontWeight={500}>
-                        Subtotal: ${prod.subtotal.toLocaleString()}
-                      </Typography>
-
-                      <Box textAlign="right">
+                      </TableCell>
+                    )}
+                    <TableCell>${prod.precioUnitario.toLocaleString()}</TableCell>
+                    {!isMobile && <TableCell>${prod.subtotal.toLocaleString()}</TableCell>}
+                    <TableCell>
+                      <motion.div whileTap={{ scale: 0.8, rotate: -10 }}>
                         <IconButton
                           color="error"
                           onClick={() => handleEliminarProducto(index)}
@@ -408,24 +346,27 @@ const Remitos = () => {
                         >
                           <DeleteIcon />
                         </IconButton>
-                      </Box>
-                    </Stack>
-                  </Paper>
-                </motion.div>
-              ))}
-
+                      </motion.div>
+                    </TableCell>
+                  </motion.tr>
+                ))}
+              </AnimatePresence>
               {productosAgregados.length === 0 && (
-                <Typography
-                  color="text.secondary"
-                  align="center"
-                  sx={{ py: 2 }}
-                >
-                  No hay productos agregados.
-                </Typography>
+                <TableRow>
+                  <TableCell colSpan={5}>
+                    <Typography
+                      color="text.secondary"
+                      align="center"
+                      sx={{ py: 2 }}
+                    >
+                      No hay productos agregados.
+                    </Typography>
+                  </TableCell>
+                </TableRow>
               )}
-            </Stack>
-          )}
-        </>
+            </TableBody>
+          </Table>
+        </TableContainer>
       </Fade>
 
       {/* Total */}

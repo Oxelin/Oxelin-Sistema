@@ -287,7 +287,7 @@ const Remitos = () => {
         />
       </Box>
 
-      {/* Tabla */}
+      {/* Tabla / Lista */}
       <Fade in>
         <TableContainer
           component={Paper}
@@ -299,15 +299,17 @@ const Remitos = () => {
           }}
         >
           <Table size={isMobile ? "small" : "medium"}>
-            <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
-              <TableRow>
-                <TableCell><b>Producto</b></TableCell>
-                {!isMobile && <TableCell><b>Cantidad</b></TableCell>}
-                <TableCell><b>Precio Unitario</b></TableCell>
-                {!isMobile && <TableCell><b>Subtotal</b></TableCell>}
-                <TableCell><b>Acciones</b></TableCell>
-              </TableRow>
-            </TableHead>
+            {!isMobile && (
+              <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
+                <TableRow>
+                  <TableCell><b>Producto</b></TableCell>
+                  <TableCell><b>Cantidad</b></TableCell>
+                  <TableCell><b>Precio Unitario</b></TableCell>
+                  <TableCell><b>Subtotal</b></TableCell>
+                  <TableCell><b>Acciones</b></TableCell>
+                </TableRow>
+              </TableHead>
+            )}
             <TableBody>
               <AnimatePresence>
                 {productosAgregados.map((prod, index) => (
@@ -317,37 +319,90 @@ const Remitos = () => {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
                     transition={{ duration: 0.3 }}
-                    whileHover={{ scale: 1.02, backgroundColor: "#f9f9f9" }}
+                    style={{ display: isMobile ? "block" : "table-row" }}
                   >
-                    <TableCell>{prod.nombre}</TableCell>
-                    {!isMobile && (
-                      <TableCell>
-                        <TextField
-                          type="number"
-                          size="small"
-                          variant="outlined"
-                          value={prod.cantidad}
-                          onChange={(e) =>
-                            handleCantidadChange(index, Number(e.target.value))
-                          }
-                          InputProps={{ inputProps: { min: 1 } }}
-                          sx={{ width: 80 }}
-                        />
+                    {isMobile ? (
+                      <TableCell
+                        colSpan={5}
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 1,
+                          borderBottom: "1px solid #eee",
+                          py: 2,
+                        }}
+                      >
+                        <Typography variant="subtitle1" fontWeight="bold">
+                          {prod.nombre}
+                        </Typography>
+
+                        <Box display="flex" justifyContent="space-between">
+                          <Typography variant="body2">Cantidad:</Typography>
+                          <TextField
+                            type="number"
+                            size="small"
+                            value={prod.cantidad}
+                            onChange={(e) =>
+                              handleCantidadChange(index, Number(e.target.value))
+                            }
+                            InputProps={{ inputProps: { min: 1 } }}
+                            sx={{ width: 80 }}
+                          />
+                        </Box>
+
+                        <Box display="flex" justifyContent="space-between">
+                          <Typography variant="body2">Precio:</Typography>
+                          <Typography variant="body2">
+                            ${prod.precioUnitario.toLocaleString()}
+                          </Typography>
+                        </Box>
+
+                        <Box display="flex" justifyContent="space-between">
+                          <Typography variant="body2">Subtotal:</Typography>
+                          <Typography variant="body2">
+                            ${prod.subtotal.toLocaleString()}
+                          </Typography>
+                        </Box>
+
+                        <Box textAlign="right">
+                          <IconButton
+                            color="error"
+                            onClick={() => handleEliminarProducto(index)}
+                            disabled={loadingSave}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Box>
                       </TableCell>
+                    ) : (
+                      <>
+                        <TableCell>{prod.nombre}</TableCell>
+                        <TableCell>
+                          <TextField
+                            type="number"
+                            size="small"
+                            variant="outlined"
+                            value={prod.cantidad}
+                            onChange={(e) =>
+                              handleCantidadChange(index, Number(e.target.value))
+                            }
+                            InputProps={{ inputProps: { min: 1 } }}
+                            sx={{ width: 80 }}
+                          />
+                        </TableCell>
+                        <TableCell>${prod.precioUnitario.toLocaleString()}</TableCell>
+                        <TableCell>${prod.subtotal.toLocaleString()}</TableCell>
+                        <TableCell>
+                          <IconButton
+                            color="error"
+                            onClick={() => handleEliminarProducto(index)}
+                            disabled={loadingSave}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </TableCell>
+                      </>
                     )}
-                    <TableCell>${prod.precioUnitario.toLocaleString()}</TableCell>
-                    {!isMobile && <TableCell>${prod.subtotal.toLocaleString()}</TableCell>}
-                    <TableCell>
-                      <motion.div whileTap={{ scale: 0.8, rotate: -10 }}>
-                        <IconButton
-                          color="error"
-                          onClick={() => handleEliminarProducto(index)}
-                          disabled={loadingSave}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </motion.div>
-                    </TableCell>
                   </motion.tr>
                 ))}
               </AnimatePresence>

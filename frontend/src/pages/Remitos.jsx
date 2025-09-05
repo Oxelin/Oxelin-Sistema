@@ -21,6 +21,9 @@ import {
   Fade,
   CircularProgress,
   useMediaQuery,
+  Card,
+  CardContent,
+  Divider,
 } from "@mui/material";
 import {
   Delete as DeleteIcon,
@@ -287,56 +290,28 @@ const Remitos = () => {
         />
       </Box>
 
-      {/* Tabla / Lista */}
+      {/* Lista de productos */}
       <Fade in>
-        <TableContainer
-          component={Paper}
-          elevation={3}
-          sx={{
-            borderRadius: 2,
-            mb: 2,
-            overflowX: "auto",
-          }}
-        >
-          <Table size={isMobile ? "small" : "medium"}>
-            {!isMobile && (
-              <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
-                <TableRow>
-                  <TableCell><b>Producto</b></TableCell>
-                  <TableCell><b>Cantidad</b></TableCell>
-                  <TableCell><b>Precio Unitario</b></TableCell>
-                  <TableCell><b>Subtotal</b></TableCell>
-                  <TableCell><b>Acciones</b></TableCell>
-                </TableRow>
-              </TableHead>
-            )}
-            <TableBody>
+        <Box>
+          {isMobile ? (
+            <Box display="flex" flexDirection="column" gap={2}>
               <AnimatePresence>
                 {productosAgregados.map((prod, index) => (
-                  <motion.tr
+                  <motion.div
                     key={prod._id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.3 }}
-                    style={{ display: isMobile ? "block" : "table-row" }}
                   >
-                    {isMobile ? (
-                      <TableCell
-                        colSpan={5}
-                        sx={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: 1,
-                          borderBottom: "1px solid #eee",
-                          py: 2,
-                        }}
-                      >
+                    <Card elevation={3} sx={{ borderRadius: 2 }}>
+                      <CardContent>
                         <Typography variant="subtitle1" fontWeight="bold">
                           {prod.nombre}
                         </Typography>
+                        <Divider sx={{ my: 1 }} />
 
-                        <Box display="flex" justifyContent="space-between">
+                        <Box display="flex" justifyContent="space-between" mb={1}>
                           <Typography variant="body2">Cantidad:</Typography>
                           <TextField
                             type="number"
@@ -350,14 +325,14 @@ const Remitos = () => {
                           />
                         </Box>
 
-                        <Box display="flex" justifyContent="space-between">
+                        <Box display="flex" justifyContent="space-between" mb={1}>
                           <Typography variant="body2">Precio:</Typography>
                           <Typography variant="body2">
                             ${prod.precioUnitario.toLocaleString()}
                           </Typography>
                         </Box>
 
-                        <Box display="flex" justifyContent="space-between">
+                        <Box display="flex" justifyContent="space-between" mb={1}>
                           <Typography variant="body2">Subtotal:</Typography>
                           <Typography variant="body2">
                             ${prod.subtotal.toLocaleString()}
@@ -373,9 +348,47 @@ const Remitos = () => {
                             <DeleteIcon />
                           </IconButton>
                         </Box>
-                      </TableCell>
-                    ) : (
-                      <>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+              {productosAgregados.length === 0 && (
+                <Typography
+                  color="text.secondary"
+                  align="center"
+                  sx={{ py: 2 }}
+                >
+                  No hay productos agregados.
+                </Typography>
+              )}
+            </Box>
+          ) : (
+            <TableContainer
+              component={Paper}
+              elevation={3}
+              sx={{ borderRadius: 2, mb: 2, overflowX: "auto" }}
+            >
+              <Table size="medium">
+                <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
+                  <TableRow>
+                    <TableCell><b>Producto</b></TableCell>
+                    <TableCell><b>Cantidad</b></TableCell>
+                    <TableCell><b>Precio Unitario</b></TableCell>
+                    <TableCell><b>Subtotal</b></TableCell>
+                    <TableCell><b>Acciones</b></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  <AnimatePresence>
+                    {productosAgregados.map((prod, index) => (
+                      <motion.tr
+                        key={prod._id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        transition={{ duration: 0.3 }}
+                      >
                         <TableCell>{prod.nombre}</TableCell>
                         <TableCell>
                           <TextField
@@ -401,27 +414,27 @@ const Remitos = () => {
                             <DeleteIcon />
                           </IconButton>
                         </TableCell>
-                      </>
-                    )}
-                  </motion.tr>
-                ))}
-              </AnimatePresence>
-              {productosAgregados.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5}>
-                    <Typography
-                      color="text.secondary"
-                      align="center"
-                      sx={{ py: 2 }}
-                    >
-                      No hay productos agregados.
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                      </motion.tr>
+                    ))}
+                  </AnimatePresence>
+                  {productosAgregados.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5}>
+                        <Typography
+                          color="text.secondary"
+                          align="center"
+                          sx={{ py: 2 }}
+                        >
+                          No hay productos agregados.
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </Box>
       </Fade>
 
       {/* Total */}
